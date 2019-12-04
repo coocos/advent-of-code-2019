@@ -1,3 +1,4 @@
+import os
 import collections
 from typing import List, Set, Dict
 
@@ -7,7 +8,7 @@ Vec = collections.namedtuple("Vec", ["x", "y"])
 
 if __name__ == "__main__":
 
-    with open("day3.in") as f:
+    with open(os.path.join("inputs", "day3.in")) as f:
         wires = [line.strip().split(",") for line in f.readlines()]
 
     # Map of direction literals to vectors

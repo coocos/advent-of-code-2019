@@ -1,10 +1,11 @@
+import os
 from collections import Counter
 from typing import List
 
 
 if __name__ == "__main__":
 
-    with open("day4.in") as f:
+    with open(os.path.join("inputs", "day4.in")) as f:
         low, high = [int(num) for num in f.read().strip().split("-")]
 
     # First part

@@ -1,3 +1,4 @@
+import os
 import sys
 from typing import List
 from enum import Enum
@@ -38,7 +39,7 @@ def execute(program: List[int]) -> List[int]:
 
 if __name__ == "__main__":
 
-    with open("day2.in") as f:
+    with open(os.path.join("inputs", "day2.in")) as f:
         program = [int(code) for code in f.read().split(",")]
 
     # First part
