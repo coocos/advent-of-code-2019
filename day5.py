@@ -2,10 +2,6 @@ import os
 from vm import Machine
 
 
-class IntcodeException(Exception):
-    pass
-
-
 if __name__ == "__main__":
 
     with open(os.path.join("inputs", "day5.in")) as f:
