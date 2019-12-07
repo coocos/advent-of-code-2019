@@ -1,3 +1,4 @@
+from __future__ import annotations
 import os
 import sys
 from dataclasses import dataclass, field
@@ -12,7 +13,7 @@ sys.setrecursionlimit(2048)
 class OrbitObject:
 
     name: str
-    children: List["OrbitObject"] = field(default_factory=list)
+    children: List[OrbitObject] = field(default_factory=list)
     orbits: int = 0
 
 
