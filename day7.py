@@ -1,5 +1,6 @@
 import os
 import itertools
+from typing import List
 from vm import Machine
 
 
@@ -9,19 +10,18 @@ if __name__ == "__main__":
         program = [int(opcode) for opcode in f.read().strip().split(",")]
 
     # First part
-    thruster_signals = []
+    series_signals: List[int] = []
     for sequence in itertools.permutations(range(5)):
         amplifier_input = 0
         for setting in sequence:
             amplifier = Machine(program, [setting, amplifier_input])
             amplifier.execute()
             amplifier_input = amplifier.output[0]
-        thruster_signals.append(amplifier_input)
-    max_thrusters = max(thruster_signals)
-    assert max_thrusters == 20413
+        series_signals.append(amplifier_input)
+    assert max(series_signals) == 20413
 
     # Second part
-    thruster_signals = []
+    feedback_signals: List[int] = []
     for sequence in itertools.permutations(range(5, 10)):
 
         amps = [
@@ -40,6 +40,6 @@ if __name__ == "__main__":
                 output_signal = amp.output[-1]
                 amps[(amp_no + 1) % len(amps)].inputs.append(output_signal)
 
-        thruster_signals.append(amps[-1].output[-1])
+        feedback_signals.append(amps[-1].output[-1])
 
-    assert max(thruster_signals) == 3321777
+    assert max(feedback_signals) == 3321777

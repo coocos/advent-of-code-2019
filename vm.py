@@ -50,10 +50,10 @@ class Machine:
         self.memory = self.memory[:]
 
     @property
-    def halted(self):
+    def halted(self) -> bool:
         return Instruction(self.memory[self.ip]).opcode == Opcode.HALT
 
-    def execute(self):
+    def execute(self) -> None:
 
         instruction = Instruction(self.memory[self.ip])
 
