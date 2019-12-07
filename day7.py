@@ -13,7 +13,7 @@ if __name__ == "__main__":
     for sequence in itertools.permutations(range(5)):
         amplifier_input = 0
         for setting in sequence:
-            amplifier = Machine(program[:], [setting, amplifier_input])
+            amplifier = Machine(program, [setting, amplifier_input])
             amplifier.execute()
             amplifier_input = amplifier.output[0]
         thruster_signals.append(amplifier_input)
@@ -25,7 +25,7 @@ if __name__ == "__main__":
     for sequence in itertools.permutations(range(5, 10)):
 
         amps = [
-            Machine(program[:], [setting], pause_on_output=True) for setting in sequence
+            Machine(program, [setting], pause_on_output=True) for setting in sequence
         ]
 
         # Kickstart the first amplifier with zero signal

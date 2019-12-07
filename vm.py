@@ -46,6 +46,9 @@ class Machine:
     output: List[int] = field(default_factory=list)
     pause_on_output: bool = False
 
+    def __post_init__(self):
+        self.memory = self.memory[:]
+
     @property
     def halted(self):
         return Instruction(self.memory[self.ip]).opcode == Opcode.HALT

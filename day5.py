@@ -8,11 +8,11 @@ if __name__ == "__main__":
         program = [int(opcode) for opcode in f.read().strip().split(",")]
 
     # First part
-    machine = Machine(program[:], [1])
+    machine = Machine(program, [1])
     machine.execute()
     assert machine.output == [0, 0, 0, 0, 0, 0, 0, 0, 0, 12428642]
 
     # Second part
-    machine = Machine(program[:], [5])
+    machine = Machine(program, [5])
     machine.execute()
     assert machine.output == [918655]
