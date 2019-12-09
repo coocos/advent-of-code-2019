@@ -17,6 +17,7 @@ class Opcode(Enum):
     JUMP_IF_FALSE = 6
     LESS_THAN = 7
     EQUALS = 8
+    RELATIVE_BASE = 9
     HALT = 99
 
 
@@ -45,13 +46,27 @@ class Machine:
     input_pointer: int = 0
     output: List[int] = field(default_factory=list)
     pause_on_output: bool = False
+    relative_base: int = 0
 
     def __post_init__(self):
-        self.memory = self.memory[:]
+        self.memory = self.memory[:] + [0] * (2048 - len(self.memory))
 
     @property
     def halted(self) -> bool:
         return Instruction(self.memory[self.ip]).opcode == Opcode.HALT
+
+    def param_value(self, mode, param):
+        # Position mode
+        if mode == 0:
+            return self.memory[param]
+        # Immediate mode
+        elif mode == 1:
+            return param
+        # Relative mode
+        elif mode == 2:
+            return self.memory[self.relative_base + param]
+        else:
+            raise IntcodeException(f"Unknown mode {mode}")
 
     def execute(self) -> None:
 
@@ -61,50 +76,65 @@ class Machine:
 
             if instruction.opcode == Opcode.ADD:
                 a, b, c = self.memory[self.ip + 1 : self.ip + 4]
-                a = a if instruction.modes[0] else self.memory[a]
-                b = b if instruction.modes[1] else self.memory[b]
+                a = self.param_value(instruction.modes[0], a)
+                b = self.param_value(instruction.modes[1], b)
+                if instruction.modes[2] == 2:
+                    c = self.relative_base + c
                 self.memory[c] = a + b
                 self.ip += 4
             elif instruction.opcode == Opcode.MULTIPLY:
                 a, b, c = self.memory[self.ip + 1 : self.ip + 4]
-                a = a if instruction.modes[0] else self.memory[a]
-                b = b if instruction.modes[1] else self.memory[b]
+                a = self.param_value(instruction.modes[0], a)
+                b = self.param_value(instruction.modes[1], b)
+                if instruction.modes[2] == 2:
+                    c = self.relative_base + c
                 self.memory[c] = a * b
                 self.ip += 4
             elif instruction.opcode == Opcode.SAVE:
                 a = self.memory[self.ip + 1]
+                if instruction.modes[0] == 2:
+                    a = self.relative_base + a
                 self.memory[a] = self.inputs[self.input_pointer]
                 self.input_pointer += 1
                 self.ip += 2
             elif instruction.opcode == Opcode.PRINT:
                 a = self.memory[self.ip + 1]
-                msg = a if instruction.modes[0] else self.memory[a]
+                msg = self.param_value(instruction.modes[0], a)
                 self.output.append(msg)
                 self.ip += 2
                 if self.pause_on_output:
                     return
             elif instruction.opcode == Opcode.JUMP_IF_TRUE:
                 a, b = self.memory[self.ip + 1 : self.ip + 3]
-                a = a if instruction.modes[0] else self.memory[a]
-                b = b if instruction.modes[1] else self.memory[b]
+                a = self.param_value(instruction.modes[0], a)
+                b = self.param_value(instruction.modes[1], b)
                 self.ip = b if a != 0 else self.ip + 3
             elif instruction.opcode == Opcode.JUMP_IF_FALSE:
                 a, b = self.memory[self.ip + 1 : self.ip + 3]
-                a = a if instruction.modes[0] else self.memory[a]
-                b = b if instruction.modes[1] else self.memory[b]
+                a = self.param_value(instruction.modes[0], a)
+                b = self.param_value(instruction.modes[1], b)
                 self.ip = b if a == 0 else self.ip + 3
             elif instruction.opcode == Opcode.LESS_THAN:
                 a, b, c = self.memory[self.ip + 1 : self.ip + 4]
-                a = a if instruction.modes[0] else self.memory[a]
-                b = b if instruction.modes[1] else self.memory[b]
+                a = self.param_value(instruction.modes[0], a)
+                b = self.param_value(instruction.modes[1], b)
+                if instruction.modes[2] == 2:
+                    c = self.relative_base + c
                 self.memory[c] = int(a < b)
                 self.ip += 4
             elif instruction.opcode == Opcode.EQUALS:
                 a, b, c = self.memory[self.ip + 1 : self.ip + 4]
-                a = a if instruction.modes[0] else self.memory[a]
-                b = b if instruction.modes[1] else self.memory[b]
+                a = self.param_value(instruction.modes[0], a)
+                b = self.param_value(instruction.modes[1], b)
+                if instruction.modes[2] == 2:
+                    c = self.relative_base + c
                 self.memory[c] = int(a == b)
                 self.ip += 4
+            elif instruction.opcode == Opcode.RELATIVE_BASE:
+                a = self.memory[self.ip + 1]
+                a = self.param_value(instruction.modes[0], a)
+                self.relative_base += a
+                self.ip += 2
             else:
                 raise IntcodeException(f"Unhandled instruction {instruction}")
 
