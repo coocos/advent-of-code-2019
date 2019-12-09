@@ -1,13 +1,14 @@
 from dataclasses import dataclass, field
 from typing import List, ClassVar
-from enum import Enum
+from enum import IntEnum, unique
 
 
 class IntcodeException(Exception):
     pass
 
 
-class Opcode(Enum):
+@unique
+class Opcode(IntEnum):
 
     ADD = 1
     MULTIPLY = 2
@@ -21,7 +22,8 @@ class Opcode(Enum):
     HALT = 99
 
 
-class Mode(Enum):
+@unique
+class Mode(IntEnum):
 
     POSITION = 0
     IMMEDIATE = 1
@@ -61,14 +63,14 @@ class Machine:
 
     @property
     def halted(self) -> bool:
-        return Instruction(self.memory[self.ip]).opcode == Opcode.HALT
+        return Instruction(self.memory[self.ip]).opcode is Opcode.HALT
 
     def apply_mode(self, mode: Mode, param: int) -> int:
-        if mode == Mode.POSITION:
+        if mode is Mode.POSITION:
             return self.memory[param]
-        elif mode == Mode.IMMEDIATE:
+        elif mode is Mode.IMMEDIATE:
             return param
-        elif mode == Mode.RELATIVE:
+        elif mode is Mode.RELATIVE:
             return self.memory[self.relative_base + param]
         else:
             raise IntcodeException(f"Unknown mode {mode}")
@@ -77,65 +79,65 @@ class Machine:
 
         instruction = Instruction(self.memory[self.ip])
 
-        while instruction.opcode != Opcode.HALT:
+        while instruction.opcode is not Opcode.HALT:
 
-            if instruction.opcode == Opcode.ADD:
+            if instruction.opcode is Opcode.ADD:
                 a, b, c = self.memory[self.ip + 1 : self.ip + 4]
                 a = self.apply_mode(instruction.modes[0], a)
                 b = self.apply_mode(instruction.modes[1], b)
-                if instruction.modes[2] == Mode.RELATIVE:
+                if instruction.modes[2] is Mode.RELATIVE:
                     c = self.relative_base + c
                 self.memory[c] = a + b
                 self.ip += 4
-            elif instruction.opcode == Opcode.MULTIPLY:
+            elif instruction.opcode is Opcode.MULTIPLY:
                 a, b, c = self.memory[self.ip + 1 : self.ip + 4]
                 a = self.apply_mode(instruction.modes[0], a)
                 b = self.apply_mode(instruction.modes[1], b)
-                if instruction.modes[2] == Mode.RELATIVE:
+                if instruction.modes[2] is Mode.RELATIVE:
                     c = self.relative_base + c
                 self.memory[c] = a * b
                 self.ip += 4
-            elif instruction.opcode == Opcode.SAVE:
+            elif instruction.opcode is Opcode.SAVE:
                 a = self.memory[self.ip + 1]
-                if instruction.modes[0] == Mode.RELATIVE:
+                if instruction.modes[0] is Mode.RELATIVE:
                     a = self.relative_base + a
                 self.memory[a] = self.inputs[0]
                 self.inputs = self.inputs[1:]
                 self.ip += 2
-            elif instruction.opcode == Opcode.PRINT:
+            elif instruction.opcode is Opcode.PRINT:
                 a = self.memory[self.ip + 1]
                 msg = self.apply_mode(instruction.modes[0], a)
                 self.output.append(msg)
                 self.ip += 2
                 if self.pause_on_output:
                     return
-            elif instruction.opcode == Opcode.JUMP_IF_TRUE:
+            elif instruction.opcode is Opcode.JUMP_IF_TRUE:
                 a, b = self.memory[self.ip + 1 : self.ip + 3]
                 a = self.apply_mode(instruction.modes[0], a)
                 b = self.apply_mode(instruction.modes[1], b)
                 self.ip = b if a != 0 else self.ip + 3
-            elif instruction.opcode == Opcode.JUMP_IF_FALSE:
+            elif instruction.opcode is Opcode.JUMP_IF_FALSE:
                 a, b = self.memory[self.ip + 1 : self.ip + 3]
                 a = self.apply_mode(instruction.modes[0], a)
                 b = self.apply_mode(instruction.modes[1], b)
                 self.ip = b if a == 0 else self.ip + 3
-            elif instruction.opcode == Opcode.LESS_THAN:
+            elif instruction.opcode is Opcode.LESS_THAN:
                 a, b, c = self.memory[self.ip + 1 : self.ip + 4]
                 a = self.apply_mode(instruction.modes[0], a)
                 b = self.apply_mode(instruction.modes[1], b)
-                if instruction.modes[2] == Mode.RELATIVE:
+                if instruction.modes[2] is Mode.RELATIVE:
                     c = self.relative_base + c
                 self.memory[c] = int(a < b)
                 self.ip += 4
-            elif instruction.opcode == Opcode.EQUALS:
+            elif instruction.opcode is Opcode.EQUALS:
                 a, b, c = self.memory[self.ip + 1 : self.ip + 4]
                 a = self.apply_mode(instruction.modes[0], a)
                 b = self.apply_mode(instruction.modes[1], b)
-                if instruction.modes[2] == Mode.RELATIVE:
+                if instruction.modes[2] is Mode.RELATIVE:
                     c = self.relative_base + c
                 self.memory[c] = int(a == b)
                 self.ip += 4
-            elif instruction.opcode == Opcode.RELATIVE_BASE:
+            elif instruction.opcode is Opcode.RELATIVE_BASE:
                 a = self.memory[self.ip + 1]
                 a = self.apply_mode(instruction.modes[0], a)
                 self.relative_base += a
