@@ -55,6 +55,7 @@ class Machine:
     output: List[int] = field(default_factory=list)
     pause_on_output: bool = False
     relative_base: int = 0
+    input_at: int = 0
 
     MEMORY_SIZE: ClassVar[int] = 4096
 
@@ -101,8 +102,8 @@ class Machine:
                 a = self.memory[self.ip + 1]
                 if instruction.modes[0] is Mode.RELATIVE:
                     a = self.relative_base + a
-                self.memory[a] = self.inputs[0]
-                self.inputs = self.inputs[1:]
+                self.memory[a] = self.inputs[self.input_at]
+                self.input_at += 1
                 self.ip += 2
             elif instruction.opcode is Opcode.PRINT:
                 a = self.memory[self.ip + 1]
