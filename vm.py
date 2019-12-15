@@ -1,3 +1,4 @@
+import random
 from dataclasses import dataclass, field
 from typing import List, ClassVar
 from enum import IntEnum, unique
@@ -54,6 +55,7 @@ class Machine:
     ip: int = 0
     output: List[int] = field(default_factory=list)
     pause_on_output: bool = False
+    wait_for_input: bool = False
     relative_base: int = 0
     input_at: int = 0
 
@@ -102,8 +104,14 @@ class Machine:
                 a = self.memory[self.ip + 1]
                 if instruction.modes[0] is Mode.RELATIVE:
                     a = self.relative_base + a
-                self.memory[a] = self.inputs[self.input_at]
-                self.input_at += 1
+                if self.wait_for_input and not self.inputs:
+                    return
+                # FIXME: There should be one way to handle inputs, not multiple
+                if self.wait_for_input:
+                    self.memory[a] = self.inputs.pop()
+                else:
+                    self.memory[a] = self.inputs[self.input_at]
+                    self.input_at += 1
                 self.ip += 2
             elif instruction.opcode is Opcode.PRINT:
                 a = self.memory[self.ip + 1]
