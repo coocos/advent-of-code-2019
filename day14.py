@@ -1,4 +1,5 @@
 import os
+import math
 import collections
 from typing import List, Dict
 
@@ -35,27 +36,45 @@ def produce(chemical: str, quantity: int, reactions: Dict) -> None:
     # If ore is needed then we can just mine it instantly
     if chemical == "ORE":
         produced[chemical] += quantity
+        consumed[chemical] += quantity
         return
+
+    already_produced = produced[chemical] - consumed[chemical]
+    multiplier = math.ceil(
+        (quantity - already_produced) / reactions[chemical]["quantity"]
+    )
 
     for sub_chemical, sub_quantity in reactions[chemical]["requires"]:
 
-        # TODO: This completely kills the performance... The second part
-        # will probably be impossible to do like this... You need to
-        # take in the multiplier for this somehow
-        while (produced[sub_chemical] - consumed[sub_chemical]) < sub_quantity:
-            produce(sub_chemical, sub_quantity, reactions)
+        produce(sub_chemical, sub_quantity * multiplier, reactions)
 
-        consumed[sub_chemical] += sub_quantity
-
-    produced[chemical] += reactions[chemical]["quantity"]
+    produced[chemical] += reactions[chemical]["quantity"] * multiplier
+    consumed[chemical] += quantity
 
 
 if __name__ == "__main__":
+
+    faster = [
+        "10 ORE => 10 A",
+        "1 ORE => 1 B",
+        "7 A, 1 B => 1 C",
+        "7 A, 1 C => 1 D",
+        "7 A, 1 D => 1 E",
+        "7 A, 1 E => 1 FUEL",
+    ]
+    reactions = parse_reactions(faster)
+    produce("FUEL", 1, reactions)
+    assert produced["ORE"] == 31
+    assert consumed["ORE"] == 31
+    assert produced["A"] == 30
+    assert consumed["A"] == 28
 
     with open(os.path.join("inputs", "day14.in")) as f:
         raw = [line.strip() for line in f.readlines()]
 
     # First part
+    consumed.clear()
+    produced.clear()
     reactions = parse_reactions(raw)
     produce("FUEL", 1, reactions)
     assert produced["ORE"] == 220019
