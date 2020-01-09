@@ -52,18 +52,17 @@ def explore(position, previous, machine, grid):
                 machine.execute()
 
 
-def steps_to_oxygen(grid):
+def distance_to_oxygen(grid, start_pos):
 
-    queue = collections.deque([(1, Vec(0, 0))])
+    queue = collections.deque([(1, start_pos)])
     visited = set()
 
     while queue:
 
-        steps, pos = queue.popleft()
+        distance, pos = queue.popleft()
 
         if grid[pos] == "o":
-            print(f"Found oxygen after {steps} steps")
-            return steps
+            return distance
         elif grid[pos] == "#":
             continue
 
@@ -72,7 +71,25 @@ def steps_to_oxygen(grid):
         for vec in direction_map.values():
             next_pos = Vec(pos.x + vec.x, pos.y + vec.y)
             if next_pos not in visited:
-                queue.append((steps + 1, next_pos))
+                queue.append((distance + 1, next_pos))
+
+
+def minutes_for_oxygen_to_spread(grid, oxygen_pos):
+
+    queue = collections.deque([(0, oxygen_pos)])
+    visited = set()
+
+    while queue:
+
+        minutes, pos = queue.popleft()
+        visited.add(pos)
+
+        for vec in direction_map.values():
+            next_pos = Vec(pos.x + vec.x, pos.y + vec.y)
+            if next_pos not in visited and grid[next_pos] != "#":
+                queue.append((minutes + 1, next_pos))
+
+    return minutes
 
 
 def draw_grid(grid, position) -> None:
@@ -105,10 +122,23 @@ if __name__ == "__main__":
 
     # Map the unknown part of the ship using depth-first search
     machine.inputs.append(Direction.SOUTH)
-    explore(Vec(0, 0), None, machine, grid)
+    start_pos = Vec(0, 0)
+    explore(start_pos, None, machine, grid)
     os.system("clear")
-    draw_grid(grid, Vec(0, 0))
+    draw_grid(grid, start_pos)
 
     # Use breadth-first search to find the shortest path to oxygen
-    steps = steps_to_oxygen(grid)
-    assert steps == 300
+    distance = distance_to_oxygen(grid, start_pos)
+    assert distance == 300
+
+    # Second part
+    oxygen_pos = None
+    for pos, point in grid.items():
+        if point == "o":
+            oxygen_pos = pos
+            break
+    assert oxygen_pos is not None
+
+    # Use breadth-first search again to find the path to the most distant point
+    minutes = minutes_for_oxygen_to_spread(grid, oxygen_pos)
+    assert minutes == 312
