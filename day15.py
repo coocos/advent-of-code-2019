@@ -30,6 +30,7 @@ def explore(position, previous, machine, grid):
     else:
         grid[position] = "o"
 
+    # Draw the grid
     if os.getenv("PRETTY_AOC"):
         os.system("clear")
         draw_grid(grid, position)

@@ -59,9 +59,35 @@ if __name__ == "__main__":
     with open(os.path.join("inputs", "day17.in")) as f:
         program = [int(instruction) for instruction in f.read().strip().split(",")]
 
-    # First part
+    # First part - visualize the grid and find intersections
     machine = Machine(program, [], wait_for_input=True)
     machine.execute()
 
     grid = create_grid(machine.output)
     assert alignment_paremeter_sum(grid) == 3292
+
+    # Second part - apply movement functions deciphered by hand
+    machine = Machine([2] + program[1:], [])
+
+    movement_routine = "A,B,A,C,A,B,C,B,C,A\n"
+    movement_functions = [
+        "L,12,R,4,R,4,L,6\n",
+        "L,12,R,4,R,4,R,12\n",
+        "L,10,L,6,R,4\n",
+    ]
+
+    for routine in movement_routine:
+        machine.inputs.append(ord(routine))
+
+    for function in movement_functions:
+        for command in function:
+            machine.inputs.append(ord(command))
+
+    # No visualization thank you
+    machine.inputs.append(ord("n"))
+    machine.inputs.append(ord("\n"))
+
+    while not machine.halted:
+        machine.execute()
+
+    assert machine.output[-1] == 651043
