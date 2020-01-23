@@ -3,8 +3,10 @@ import time
 import collections
 from enum import IntEnum
 from vm import Machine
+from typing import Optional, DefaultDict, Deque, Tuple, Set
 
 Vec = collections.namedtuple("Vec", ["x", "y"])
+Grid = DefaultDict[Vec, str]
 direction_map = {1: Vec(0, -1), 2: Vec(0, 1), 3: Vec(-1, 0), 4: Vec(1, 0)}
 
 
@@ -16,7 +18,9 @@ class Direction(IntEnum):
     EAST = 4
 
 
-def explore(position, previous, machine, grid):
+def explore(
+    position: Vec, previous: Optional[Vec], machine: Machine, grid: Grid
+) -> None:
 
     machine.execute()
     tile = machine.output[-1]
@@ -36,7 +40,7 @@ def explore(position, previous, machine, grid):
         draw_grid(grid, position)
         time.sleep(0.01)
 
-    for d in (1, 2, 3, 4):
+    for d in Direction:
         vec = direction_map[d]
 
         next_position = Vec(position.x + vec.x, position.y + vec.y)
@@ -53,10 +57,10 @@ def explore(position, previous, machine, grid):
                 machine.execute()
 
 
-def distance_to_oxygen(grid, start_pos):
+def distance_to_oxygen(grid: Grid, start_pos: Vec) -> int:
 
-    queue = collections.deque([(1, start_pos)])
-    visited = set()
+    queue: Deque[Tuple[int, Vec]] = collections.deque([(1, start_pos)])
+    visited: Set[Vec] = set()
 
     while queue:
 
@@ -74,11 +78,13 @@ def distance_to_oxygen(grid, start_pos):
             if next_pos not in visited:
                 queue.append((distance + 1, next_pos))
 
+    return -1
 
-def minutes_for_oxygen_to_spread(grid, oxygen_pos):
 
-    queue = collections.deque([(0, oxygen_pos)])
-    visited = set()
+def minutes_for_oxygen_to_spread(grid: Grid, oxygen_pos: Vec) -> int:
+
+    queue: Deque[Tuple[int, Vec]] = collections.deque([(0, oxygen_pos)])
+    visited: Set[Vec] = set()
 
     while queue:
 
@@ -93,7 +99,7 @@ def minutes_for_oxygen_to_spread(grid, oxygen_pos):
     return minutes
 
 
-def draw_grid(grid, position) -> None:
+def draw_grid(grid: Grid, position: Vec) -> None:
 
     ys = [vec.y for vec in sorted(grid.keys(), key=lambda pos: pos.y)]
     xs = [vec.x for vec in sorted(grid.keys(), key=lambda pos: pos.x)]
@@ -119,16 +125,17 @@ if __name__ == "__main__":
     machine = Machine(program, [], wait_for_input=True)
     machine.execute()
 
-    grid = collections.defaultdict(lambda: " ")
+    grid: Grid = collections.defaultdict(lambda: " ")
 
-    # Map the unknown part of the ship using depth-first search
+    # First map the unknown part of the ship using depth-first search
     machine.inputs.append(Direction.SOUTH)
     start_pos = Vec(0, 0)
     explore(start_pos, None, machine, grid)
+
     os.system("clear")
     draw_grid(grid, start_pos)
 
-    # Use breadth-first search to find the shortest path to oxygen
+    # Now that the map is known use breadth-first search to find the shortest path
     distance = distance_to_oxygen(grid, start_pos)
     assert distance == 300
 

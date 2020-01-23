@@ -3,7 +3,7 @@ import os
 import math
 import collections
 from operator import itemgetter
-from typing import List, Any, DefaultDict, Tuple
+from typing import List, DefaultDict, Tuple, Set
 from dataclasses import dataclass
 
 
@@ -26,51 +26,45 @@ class Vector:
         return Vector(self.x // gcd, self.y // gcd)
 
 
-@dataclass
-class Asteroid:
-
-    pos: Vector
-
-
-def parse_asteroids(grid: List[List[str]]) -> List[Asteroid]:
+def parse_asteroids(grid: List[List[str]]) -> List[Vector]:
 
     asteroids = []
     for y in range(len(grid)):
         for x in range(len(grid[y])):
             if grid[y][x] == "#":
-                asteroids.append(Asteroid(Vector(x, y)))
+                asteroids.append(Vector(x, y))
 
     return asteroids
 
 
-def count_visible_asteroids(origin: Asteroid, asteroids: List[Asteroid]) -> int:
+def count_visible_asteroids(origin: Vector, asteroids: List[Vector]) -> int:
 
-    visible = set()
+    visible: Set[Tuple[int, int]] = set()
     for asteroid in asteroids:
         if asteroid != origin:
             direction = Vector(
-                asteroid.pos.x - origin.pos.x, asteroid.pos.y - origin.pos.y
+                asteroid.x - origin.x, asteroid.y - origin.y
             ).normalized()
             visible.add((direction.x, direction.y))
 
     return len(visible)
 
 
-def group_asteroids(station: Asteroid, asteroids: List[Asteroid]) -> Any:
+def group_asteroids(station: Vector, asteroids: List[Vector]) -> DefaultDict:
 
     groups: DefaultDict[
-        Tuple[int, int], List[Tuple[Asteroid, float]]
+        Tuple[int, int], List[Tuple[Vector, float]]
     ] = collections.defaultdict(list)
     for asteroid in asteroids:
         if asteroid != station:
             from_station_to_asteroid = Vector(
-                asteroid.pos.x - station.pos.x, asteroid.pos.y - station.pos.y
+                asteroid.x - station.x, asteroid.y - station.y
             )
             direction = from_station_to_asteroid.normalized()
             magnitude = from_station_to_asteroid.magnitude
             groups[(direction.x, direction.y)].append((asteroid, magnitude))
 
-    # Be nasty and sort the gorups by distance here
+    # Be nasty and sort the groups by distance here
     for group in groups.values():
         group.sort(key=itemgetter(1), reverse=True)
 
@@ -89,7 +83,7 @@ if __name__ == "__main__":
         for asteroid in asteroids
     ]
     station, visible = max(visibility, key=itemgetter(1))
-    assert station.pos == Vector(29, 28)
+    assert station == Vector(29, 28)
     assert visible == 256
 
     # Second part
@@ -108,6 +102,7 @@ if __name__ == "__main__":
             else:
                 quadrants["bl"].append(direction)
 
+    # Oh dear
     quadrants["tr"].sort(key=lambda d: math.atan2(-d[1], d[0]), reverse=True)
     quadrants["br"].sort(key=lambda d: math.atan2(d[1], d[0]))
     quadrants["bl"].sort(key=lambda d: math.atan2(d[1], -d[0]), reverse=True)
@@ -117,11 +112,11 @@ if __name__ == "__main__":
         quadrants["tr"] + quadrants["br"] + quadrants["bl"] + quadrants["tl"]
     )
 
-    vaporized: List[Asteroid] = []
+    vaporized: List[Vector] = []
     for group in asteroid_groups:
         asteroid, _ = groups[group].pop()
         vaporized.append(asteroid)
         if len(vaporized) == 200:
             break
 
-    assert vaporized[199].pos == Vector(17, 7)
+    assert vaporized[199] == Vector(17, 7)

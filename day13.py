@@ -17,7 +17,10 @@ class Tile(IntEnum):
         return {0: " ", 1: "#", 2: "*", 3: "=", 4: "o"}[self]
 
 
-def draw(pixels, score):
+Pixels = Dict[Tuple[int, int], Tile]
+
+
+def draw(pixels: Pixels, score: int) -> None:
 
     for y in range(22 + 1):
         row = ""
@@ -37,7 +40,7 @@ if __name__ == "__main__":
     machine.execute()
 
     output = machine.output[:]
-    pixels: Dict[Tuple[int, int], Tile] = {}
+    pixels: Pixels = {}
 
     while output:
         x, y, tile = output[:3]
@@ -92,10 +95,7 @@ if __name__ == "__main__":
             machine.output = machine.output[3:]
 
         # Simply move the paddle towards the ball
-        if ball < paddle:
-            player_input = -1
-        else:
-            player_input = 1
+        player_input = -1 if ball < paddle else 1
 
         machine.inputs.append(player_input)
 

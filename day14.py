@@ -1,27 +1,35 @@
 import os
 import math
 import collections
-from typing import List, Dict
+from dataclasses import dataclass
+from typing import List, Tuple, Dict, DefaultDict
 
 
 # Ooh nasty globals
-produced = collections.defaultdict(int)
-consumed = collections.defaultdict(int)
+produced: DefaultDict[str, int] = collections.defaultdict(int)
+consumed: DefaultDict[str, int] = collections.defaultdict(int)
+
+
+@dataclass
+class Chemical:
+
+    quantity: int
+    requires: List[Tuple[str, int]]
 
 
 def parse_reactions(raw_reactions: List[str]) -> Dict:
 
-    reactions = {}
+    reactions: Dict[str, Chemical] = {}
 
     for reaction in raw_reactions:
 
         needed, produced = reaction.split(" => ")
         quantity, product = produced.split(" ")
-        reactions[product] = {"quantity": int(quantity), "requires": []}
+        reactions[product] = Chemical(int(quantity), [])
 
         for chemical_amount in needed.split(", "):
             amount, chemical = chemical_amount.split(" ")
-            reactions[product]["requires"].append((chemical, int(amount)))
+            reactions[product].requires.append((chemical, int(amount)))
 
     return reactions
 
@@ -40,15 +48,13 @@ def produce(chemical: str, quantity: int, reactions: Dict) -> None:
         return
 
     already_produced = produced[chemical] - consumed[chemical]
-    multiplier = math.ceil(
-        (quantity - already_produced) / reactions[chemical]["quantity"]
-    )
+    multiplier = math.ceil((quantity - already_produced) / reactions[chemical].quantity)
 
-    for sub_chemical, sub_quantity in reactions[chemical]["requires"]:
+    for sub_chemical, sub_quantity in reactions[chemical].requires:
 
         produce(sub_chemical, sub_quantity * multiplier, reactions)
 
-    produced[chemical] += reactions[chemical]["quantity"] * multiplier
+    produced[chemical] += reactions[chemical].quantity * multiplier
     consumed[chemical] += quantity
 
 
@@ -57,9 +63,7 @@ if __name__ == "__main__":
     with open(os.path.join("inputs", "day14.in")) as f:
         raw = [line.strip() for line in f.readlines()]
 
-    # First part
-    consumed.clear()
-    produced.clear()
+    # First part - apply the reactions
     reactions = parse_reactions(raw)
     produce("FUEL", 1, reactions)
     assert produced["ORE"] == 220019

@@ -39,6 +39,7 @@ class Robot:
         self.pos = Vector(self.pos.x + self.dir.x, self.pos.y + self.dir.y)
 
     def turn_right(self) -> None:
+
         if self.dir == Vector(0, 1):
             self.dir = Vector(1, 0)
         elif self.dir == Vector(1, 0):

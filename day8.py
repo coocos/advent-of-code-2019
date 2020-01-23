@@ -14,7 +14,7 @@ class Layer:
         default_factory=lambda: collections.defaultdict(int)
     )
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         for row in self.rows:
             for pixel in row:
                 self.counts[pixel] += 1
