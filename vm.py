@@ -1,11 +1,10 @@
-import random
 from dataclasses import dataclass, field
 from typing import List, ClassVar
 from enum import IntEnum, unique
 
 
-class IntcodeException(Exception):
-    pass
+class UnknownOpcode(Exception):
+    """Raised when an unknown opcode is encountered"""
 
 
 @unique
@@ -62,7 +61,9 @@ class Machine:
     MEMORY_SIZE: ClassVar[int] = 4096
 
     def __post_init__(self) -> None:
-        self.memory = self.memory[:] + [0] * (Machine.MEMORY_SIZE - len(self.memory))
+        self.memory = self.memory[:] + [
+            0 for _ in range(Machine.MEMORY_SIZE - len(self.memory))
+        ]
 
     @property
     def halted(self) -> bool:
@@ -71,12 +72,10 @@ class Machine:
     def apply_mode(self, mode: Mode, param: int) -> int:
         if mode is Mode.POSITION:
             return self.memory[param]
-        elif mode is Mode.IMMEDIATE:
-            return param
         elif mode is Mode.RELATIVE:
             return self.memory[self.relative_base + param]
         else:
-            raise IntcodeException(f"Unknown mode {mode}")
+            return param
 
     def execute(self) -> None:
 
@@ -152,6 +151,6 @@ class Machine:
                 self.relative_base += a
                 self.ip += 2
             else:
-                raise IntcodeException(f"Unhandled instruction {instruction}")
+                raise UnknownOpcode(f"Unknown opcode: {instruction}")
 
             instruction = Instruction(self.memory[self.ip])
